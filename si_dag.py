@@ -16,7 +16,7 @@ with DAG(
     start_date=days_ago(2),
     tags=["example"],
 ) as dag:
-    ubuntu16 = KubernetesPodOperator(
+    spark_scala = KubernetesPodOperator(
         task_id="pod-ex-minimum",
         name="pod-ex-minimum",
         namespace="default",
@@ -25,7 +25,7 @@ with DAG(
         arguments=["scala", "--version"],
     )
 
-    ubuntu20 = KubernetesPodOperator(
+    spark_python = KubernetesPodOperator(
         task_id="pod-ex-minimum-2",
         name="pod-ex-minimum-2",
         namespace="default",
@@ -34,4 +34,4 @@ with DAG(
         arguments=["python", "--version"],
     )
 
-    ubuntu16 >> ubuntu20
+    spark_scala >> spark_python
