@@ -21,7 +21,8 @@ with DAG(
         name="pod-ex-minimum",
         namespace="default",
         image="spark:scala",
-        cmds=["echo", "scala_version"],
+        cmds=["bash", "-cx"],
+        arguments=["scala", "--version"],
     )
 
     ubuntu20 = KubernetesPodOperator(
@@ -29,7 +30,8 @@ with DAG(
         name="pod-ex-minimum-2",
         namespace="default",
         image="spark:python3",
-        cmds=["echo", "python_version"],
+        cmds=["bash", "-cx"],
+        arguments=["python", "--version"],
     )
 
     ubuntu16 >> ubuntu20
