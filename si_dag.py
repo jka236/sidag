@@ -1,37 +1,56 @@
 from airflow import DAG
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
-    KubernetesPodOperator,
-)
-from airflow.utils.dates import days_ago
+from datetime import datetime, timedelta
+from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 default_args = {
     "owner": "airflow",
+    "depends_on_past": False,
+    "start_date": datetime.utcnow(),
+    "email": ["airflow@example.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
 }
 
-with DAG(
-    "example_kubernetes_pod",
+dag = DAG(
+    "kubernetes_hello_world",
     default_args=default_args,
-    description="A simple tutorial DAG",
-    schedule_interval=None,
-    start_date=days_ago(2),
-    tags=["example"],
-) as dag:
-    spark_scala = KubernetesPodOperator(
-        task_id="pod-ex-minimum",
-        name="pod-ex-minimum",
-        namespace="default",
-        image="spark:scala",
-        cmds=["bash", "-cx"],
-        arguments=["scala", "--version"],
-    )
+    schedule_interval=timedelta(minutes=10),
+)
 
-    spark_python = KubernetesPodOperator(
-        task_id="pod-ex-minimum-2",
-        name="pod-ex-minimum-2",
-        namespace="default",
-        image="spark:python3",
-        cmds=["bash", "-cx"],
-        arguments=["python", "--version"],
-    )
 
-    spark_scala >> spark_python
+start = DummyOperator(task_id="start", dag=dag)
+
+passing = KubernetesPodOperator(
+    namespace="default",
+    image="python:3.6",
+    cmds=["python", "-c"],
+    arguments=["print('hello world')"],
+    labels={"foo": "bar"},
+    name="passing-test",
+    task_id="passing-task",
+    get_logs=True,
+    dag=dag,
+)
+
+failing = KubernetesPodOperator(
+    namespace="default",
+    image="ubuntu:16.04",
+    cmds=["python", "-c"],
+    arguments=["print('hello world')"],
+    labels={"foo": "bar"},
+    name="fail",
+    task_id="failing-task",
+    get_logs=True,
+    dag=dag,
+)
+
+end = DummyOperator(task_id="end", dag=dag)
+
+
+passing.set_upstream(start)
+failing.set_upstream(start)
+passing.set_downstream(end)
+failing.set_downstream(end)
