@@ -1,56 +1,40 @@
-from airflow import DAG
 from datetime import datetime, timedelta
-from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
-from airflow.operators.dummy_operator import DummyOperator
+from textwrap import dedent
 
-default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": datetime.utcnow(),
-    "email": ["airflow@example.com"],
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
-}
+# The DAG object; we'll need this to instantiate a DAG
+from airflow import DAG
 
-dag = DAG(
-    "kubernetes_hello_world",
-    default_args=default_args,
-    schedule_interval=timedelta(minutes=10),
-)
+# Operators; we need this to operate!
+from airflow.operators.bash import BashOperator
 
+with DAG(
+    "tutorial",
+    # These args will get passed on to each operator
+    # You can override them on a per-task basis during operator initialization
+    default_args={
+        "depends_on_past": False,
+        "email": ["airflow@example.com"],
+        "email_on_failure": False,
+        "email_on_retry": False,
+        "retries": 1,
+        "retry_delay": timedelta(minutes=5),
+    },
+    description="A simple tutorial DAG",
+    schedule=timedelta(days=1),
+    start_date=datetime(2021, 1, 1),
+    catchup=False,
+    tags=["example"],
+) as dag:
+    # t1, t2 are examples of tasks created by instantiating operators
+    t1 = BashOperator(
+        task_id="print_date",
+        bash_command="date",
+    )
 
-start = DummyOperator(task_id="start", dag=dag)
-
-passing = KubernetesPodOperator(
-    namespace="default",
-    image="python:3.6",
-    cmds=["python", "-c"],
-    arguments=["print('hello world')"],
-    labels={"foo": "bar"},
-    name="passing-test",
-    task_id="passing-task",
-    get_logs=True,
-    dag=dag,
-)
-
-failing = KubernetesPodOperator(
-    namespace="default",
-    image="ubuntu:16.04",
-    cmds=["python", "-c"],
-    arguments=["print('hello world')"],
-    labels={"foo": "bar"},
-    name="fail",
-    task_id="failing-task",
-    get_logs=True,
-    dag=dag,
-)
-
-end = DummyOperator(task_id="end", dag=dag)
-
-
-passing.set_upstream(start)
-failing.set_upstream(start)
-passing.set_downstream(end)
-failing.set_downstream(end)
+    t2 = BashOperator(
+        task_id="sleep",
+        depends_on_past=False,
+        bash_command="sleep 5",
+        retries=3,
+    )
+    t1 >> t2
