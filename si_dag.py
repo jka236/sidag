@@ -22,7 +22,7 @@ with DAG(
         namespace="airflow",
         image="spark:scala",
         cmds=["bash", "-cx"],
-        arguments=["scala", "--version"],
+        arguments=["/opt/spark/bin/spark-shell --version"],
     )
 
     spark_python = KubernetesPodOperator(
@@ -31,7 +31,7 @@ with DAG(
         namespace="airflow",
         image="spark:python3",
         cmds=["bash", "-cx"],
-        arguments=["python", "--version"],
+        arguments=["/opt/spark/bin/pyspark", "--version"],
     )
 
     spark_python >> spark_scala
