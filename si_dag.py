@@ -34,4 +34,4 @@ with DAG(
         arguments=["python", "--version"],
     )
 
-    spark_scala >> spark_python
+    spark_python >> spark_scala
