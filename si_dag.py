@@ -9,7 +9,7 @@ default_args = {
 }
 
 with DAG(
-    "example_kubernetes_pod",
+    "spark_kubernetes_pod",
     default_args=default_args,
     description="A simple tutorial DAG",
     schedule_interval=None,
