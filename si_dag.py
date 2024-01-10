@@ -1,57 +1,37 @@
 from airflow import DAG
-from datetime import datetime, timedelta
-from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
+from airflow.utils.dates import days_ago
 
 default_args = {
     "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": datetime.utcnow(),
-    "email": ["airflow@example.com"],
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
 }
 
-dag = DAG(
-    "kubernetes_hello_world",
+with DAG(
+    "example_kubernetes_pod",
     default_args=default_args,
-    schedule_interval=timedelta(minutes=10),
-)
+    description="A simple tutorial DAG",
+    schedule_interval=None,
+    start_date=days_ago(2),
+    tags=["example"],
+) as dag:
+    spark_scala = KubernetesPodOperator(
+        task_id="pod-ex-minimum",
+        name="pod-ex-minimum",
+        namespace="airflow",
+        image="spark:scala",
+        cmds=["bash", "-cx"],
+        arguments=["scala", "--version"],
+    )
 
+    spark_python = KubernetesPodOperator(
+        task_id="pod-ex-minimum-2",
+        name="pod-ex-minimum-2",
+        namespace="airflow",
+        image="spark:python3",
+        cmds=["bash", "-cx"],
+        arguments=["python", "--version"],
+    )
 
-start = DummyOperator(task_id="start", dag=dag)
-
-passing = KubernetesPodOperator(
-    namespace="airflow",
-    image="python:3.6",
-    cmds=["python", "-c"],
-    arguments=["print('hello world')"],
-    labels={"foo": "bar"},
-    name="passing-test",
-    task_id="passing-task",
-    get_logs=True,
-    dag=dag,
-)
-
-passing.dry_run()
-# failing = KubernetesPodOperator(
-#     namespace="default",
-#     image="ubuntu:16.04",
-#     cmds=["python", "-c"],
-#     arguments=["print('hello world')"],
-#     labels={"foo": "bar"},
-#     name="fail",
-#     task_id="failing-task",
-#     get_logs=True,
-#     dag=dag,
-# )
-
-# end = DummyOperator(task_id="end", dag=dag)
-
-
-# passing.set_upstream(start)
-# failing.set_upstream(start)
-# passing.set_downstream(end)
-# failing.set_downstream(end)
+    spark_scala >> spark_python
