@@ -152,25 +152,25 @@ with DAG(
         task_id="load_episodes", python_callable=load_episodes
     )
 
-    download_episodes_task = PythonOperator(
-        task_id='download_episodes',
-        python_callable=download_episodes,
-    )
+    # download_episodes_task = PythonOperator(
+    #     task_id='download_episodes',
+    #     python_callable=download_episodes,
+    # )
 
-    speech_to_text_task = PythonOperator(
-        task_id='speech_to_text',
-        python_callable=speech_to_text,
-    )
+    # speech_to_text_task = PythonOperator(
+    #     task_id='speech_to_text',
+    #     python_callable=speech_to_text,
+    # )
     
-    summarize_episodes_task = PythonOperator(
-        task_id="summarize_episodes", 
-        python_callable=summarize_episodes
-    )
+    # summarize_episodes_task = PythonOperator(
+    #     task_id="summarize_episodes", 
+    #     python_callable=summarize_episodes
+    # )
 
     (
         create_database
         >> get_episodes_task
         >> load_episodes_task
-        >> [load_episodes_task >> download_episodes_task]
-        >> speech_to_text_task
+        # >> [load_episodes_task >> download_episodes_task]
+        # >> speech_to_text_task
     )
