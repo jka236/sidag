@@ -30,7 +30,7 @@ def get_episodes():
 def load_episodes(**context):
     episodes = context["task_instance"].xcom_pull(task_ids="get_episodes")
 
-    hook = PostgresHook(sqlite_conn_id="podcasts")
+    hook = PostgresHook(postgres_conn_id="postgres")
     stored_episodes = hook.get_pandas_df("SELECT * from episodes;")
     new_episodes = []
     for episode in episodes:
@@ -71,7 +71,7 @@ def download_episodes(**context):
 
 
 def speech_to_text():
-    hook = PostgresHook(sqlite_conn_id="podcasts")
+    hook = PostgresHook(postgres_conn_id="postgres")
     untranscribed_episodes = hook.get_pandas_df(
         "SELECT * from episodes WHERE transcript IS NULL;"
     )
@@ -122,7 +122,7 @@ with DAG(
             transcript TEXT
         );
         """,
-        sqlite_conn_id="podcasts",
+        postgres_conn_id="postgres",
     )
 
     get_episodes_task = PythonOperator(
