@@ -9,7 +9,7 @@ import json
 import requests
 import xmltodict
 import pendulum
-from summarizer import Summarizer
+# from summarizer import Summarizer
 
 PODCAST_URL = "https://www.marketplace.org/feed/podcast/marketplace/"
 EPISODE_FOLDER = "episodes"
@@ -104,22 +104,22 @@ def speech_to_text():
             replace=True,
         )
 
-def summarize_episodes():
-    hook = PostgresHook(postgres_conn_id="postgres")
-    unsummarized_episodes = hook.get_pandas_df(
-        "SELECT * from episodes WHERE summary IS NULL;"
-    )
-    model = Summarizer()
-    for index, row in unsummarized_episodes.iterrows():
-        print(f"Summarizing {row['title']}")
-        summary = model(row["transcript"], min_length=60)
-        summary = "".join(summary)
-        hook.insert_rows(
-            table="episodes",
-            rows=[[row["link"], summary]],
-            target_fields=["link", "summary"],
-            replace=True,
-        )
+# def summarize_episodes():
+#     hook = PostgresHook(postgres_conn_id="postgres")
+#     unsummarized_episodes = hook.get_pandas_df(
+#         "SELECT * from episodes WHERE summary IS NULL;"
+#     )
+#     model = Summarizer()
+#     for index, row in unsummarized_episodes.iterrows():
+#         print(f"Summarizing {row['title']}")
+#         summary = model(row["transcript"], min_length=60)
+#         summary = "".join(summary)
+#         hook.insert_rows(
+#             table="episodes",
+#             rows=[[row["link"], summary]],
+#             target_fields=["link", "summary"],
+#             replace=True,
+#         )
 
 
 with DAG(
