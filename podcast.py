@@ -148,6 +148,7 @@ with DAG(
     (
         create_database
         >> get_episodes_task
-        >> [load_episodes_task >> download_episodes_task]
-        >> speech_to_text_task
+        >> load_episodes_task
+        # >> [load_episodes_task >> download_episodes_task]
+        # >> speech_to_text_task
     )
